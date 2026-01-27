@@ -1,8 +1,14 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { Donation } from '../types';
 
-const DonationCard = ({ donation, onPress }) => {
+interface DonationCardProps {
+    donation: Donation;
+    onPress: () => void;
+}
+
+const DonationCard: React.FC<DonationCardProps> = ({ donation, onPress }) => {
     return (
         <TouchableOpacity style={styles.card} onPress={onPress}>
             <Image source={{ uri: donation.imageUrl }} style={styles.image} />

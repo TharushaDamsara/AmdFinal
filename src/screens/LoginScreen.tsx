@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../services/authService';
+import { RootState, AppDispatch } from '../store/store';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const LoginScreen = ({ navigation }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const dispatch = useDispatch();
-    const { loading, error } = useSelector((state) => state.auth);
+type LoginNavigationProp = StackNavigationProp<any, 'Login'>;
+
+interface Props {
+    navigation: LoginNavigationProp;
+}
+
+const LoginScreen: React.FC<Props> = ({ navigation }) => {
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const dispatch = useDispatch<AppDispatch>();
+    const { loading, error } = useSelector((state: RootState) => state.auth);
 
     const handleLogin = () => {
         if (email && password) {

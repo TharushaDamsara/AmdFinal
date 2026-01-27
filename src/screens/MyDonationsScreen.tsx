@@ -7,14 +7,24 @@ import { useSelector } from 'react-redux';
 import { getDonorDonations, deleteDonation } from '../services/donationService';
 import DonationCard from '../components/DonationCard';
 import { Ionicons } from '@expo/vector-icons';
+import { RootState } from '../store/store';
+import { Donation } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const MyDonationsScreen = ({ navigation }) => {
-    const [donations, setDonations] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const { user } = useSelector((state) => state.auth);
+type MyDonationsNavigationProp = StackNavigationProp<any, 'My Donations'>;
+
+interface Props {
+    navigation: MyDonationsNavigationProp;
+}
+
+const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
+    const [donations, setDonations] = useState<Donation[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
+    const { user } = useSelector((state: RootState) => state.auth);
 
     const fetchMyDonations = async () => {
+        if (!user) return;
         try {
             const data = await getDonorDonations(user.uid);
             setDonations(data);
@@ -28,14 +38,14 @@ const MyDonationsScreen = ({ navigation }) => {
 
     useEffect(() => {
         fetchMyDonations();
-    }, [user.uid]);
+    }, [user?.uid]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
         fetchMyDonations();
-    }, [user.uid]);
+    }, [user?.uid]);
 
-    const handleDelete = (id) => {
+    const handleDelete = (id: string) => {
         Alert.alert(
             "Delete Donation",
             "Are you sure you want to remove this listing? This action cannot be undone.",

@@ -2,14 +2,23 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../services/authService';
+import { RootState, AppDispatch } from '../store/store';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { UserRole } from '../types';
 
-const RegisterScreen = ({ navigation }) => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [displayName, setDisplayName] = useState('');
-    const [role, setRole] = useState('donor'); // Default role
-    const dispatch = useDispatch();
-    const { loading, error } = useSelector((state) => state.auth);
+type RegisterNavigationProp = StackNavigationProp<any, 'Register'>;
+
+interface Props {
+    navigation: RegisterNavigationProp;
+}
+
+const RegisterScreen: React.FC<Props> = ({ navigation }) => {
+    const [email, setEmail] = useState<string>('');
+    const [password, setPassword] = useState<string>('');
+    const [displayName, setDisplayName] = useState<string>('');
+    const [role, setRole] = useState<UserRole>('donor');
+    const dispatch = useDispatch<AppDispatch>();
+    const { loading, error } = useSelector((state: RootState) => state.auth);
 
     const handleRegister = () => {
         if (email && password && displayName) {

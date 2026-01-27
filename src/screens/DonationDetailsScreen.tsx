@@ -6,10 +6,26 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { updateDonationStatus } from '../services/donationService';
+import { RootState } from '../store/store';
+import { RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Donation } from '../types';
 
-const DonationDetailsScreen = ({ route, navigation }) => {
+type RootStackParamList = {
+    DonationDetails: { donation: Donation };
+};
+
+type DonationDetailsRouteProp = RouteProp<RootStackParamList, 'DonationDetails'>;
+type DonationDetailsNavigationProp = StackNavigationProp<RootStackParamList, 'DonationDetails'>;
+
+interface Props {
+    route: DonationDetailsRouteProp;
+    navigation: DonationDetailsNavigationProp;
+}
+
+const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
     const { donation } = route.params;
-    const { user, role } = useSelector((state) => state.auth);
+    const { role } = useSelector((state: RootState) => state.auth);
 
     const handleAccept = async () => {
         Alert.alert(

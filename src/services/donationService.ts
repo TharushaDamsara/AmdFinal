@@ -1,9 +1,9 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, DocumentData } from "firebase/firestore";
 import { db, storage } from "./firebaseConfig";
+import { Donation, DonationStatus } from "../types";
 
-// Upload image to Firebase Storage
-export const uploadImage = async (uri) => {
+export const uploadImage = async (uri: string): Promise<string | null> => {
     if (!uri) return null;
     const response = await fetch(uri);
     const blob = await response.blob();
@@ -13,8 +13,7 @@ export const uploadImage = async (uri) => {
     return await getDownloadURL(storageRef);
 };
 
-// Create a new donation
-export const createDonation = async (donationData) => {
+export const createDonation = async (donationData: Omit<Donation, 'id' | 'status' | 'createdAt'>): Promise<string> => {
     try {
         const docRef = await addDoc(collection(db, "donations"), {
             ...donationData,
@@ -28,8 +27,7 @@ export const createDonation = async (donationData) => {
     }
 };
 
-// Fetch donations (optional filters)
-export const getDonations = async (status = 'available') => {
+export const getDonations = async (status: DonationStatus = 'available'): Promise<Donation[]> => {
     try {
         const q = query(
             collection(db, "donations"),
@@ -37,15 +35,14 @@ export const getDonations = async (status = 'available') => {
             orderBy("createdAt", "desc")
         );
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Donation));
     } catch (error) {
         console.error("Error fetching donations: ", error);
         throw error;
     }
 };
 
-// Fetch donations by donor
-export const getDonorDonations = async (donorId) => {
+export const getDonorDonations = async (donorId: string): Promise<Donation[]> => {
     try {
         const q = query(
             collection(db, "donations"),
@@ -53,15 +50,14 @@ export const getDonorDonations = async (donorId) => {
             orderBy("createdAt", "desc")
         );
         const querySnapshot = await getDocs(q);
-        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Donation));
     } catch (error) {
         console.error("Error fetching donor donations: ", error);
         throw error;
     }
 };
 
-// Update donation status
-export const updateDonationStatus = async (donationId, status) => {
+export const updateDonationStatus = async (donationId: string, status: DonationStatus): Promise<void> => {
     try {
         const docRef = doc(db, "donations", donationId);
         await updateDoc(docRef, { status });
@@ -71,8 +67,7 @@ export const updateDonationStatus = async (donationId, status) => {
     }
 };
 
-// Delete donation
-export const deleteDonation = async (donationId) => {
+export const deleteDonation = async (donationId: string): Promise<void> => {
     try {
         await deleteDoc(doc(db, "donations", donationId));
     } catch (error) {

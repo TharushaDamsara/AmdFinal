@@ -7,16 +7,25 @@ import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useSelector } from 'react-redux';
 import { createDonation, uploadImage } from '../services/donationService';
+import { RootState } from '../store/store';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { Location as AppLocation } from '../types';
 
-const AddDonationScreen = ({ navigation }) => {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [quantity, setQuantity] = useState('');
-    const [image, setImage] = useState(null);
-    const [location, setLocation] = useState(null);
-    const [loading, setLoading] = useState(false);
+type AddDonationNavigationProp = StackNavigationProp<any, 'Add'>;
 
-    const { user } = useSelector((state) => state.auth);
+interface Props {
+    navigation: AddDonationNavigationProp;
+}
+
+const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
+    const [title, setTitle] = useState<string>('');
+    const [description, setDescription] = useState<string>('');
+    const [quantity, setQuantity] = useState<string>('');
+    const [image, setImage] = useState<string | null>(null);
+    const [location, setLocation] = useState<AppLocation | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+
+    const { user } = useSelector((state: RootState) => state.auth);
 
     useEffect(() => {
         (async () => {
@@ -47,7 +56,7 @@ const AddDonationScreen = ({ navigation }) => {
     };
 
     const handleSubmit = async () => {
-        if (!title || !description || !quantity || !image || !location) {
+        if (!title || !description || !quantity || !image || !location || !user) {
             Alert.alert('Error', 'Please fill all fields and add an image.');
             return;
         }
@@ -55,6 +64,8 @@ const AddDonationScreen = ({ navigation }) => {
         setLoading(true);
         try {
             const imageUrl = await uploadImage(image);
+            if (!imageUrl) throw new Error('Image upload failed');
+
             await createDonation({
                 title,
                 description,
@@ -62,7 +73,7 @@ const AddDonationScreen = ({ navigation }) => {
                 imageUrl,
                 location,
                 donorId: user.uid,
-                donorName: user.displayName,
+                donorName: user.displayName || 'Anonymous',
             });
             Alert.alert('Success', 'Food donation posted successfully!');
             navigation.navigate('Home');

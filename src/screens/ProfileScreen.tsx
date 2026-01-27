@@ -1,12 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../services/authService';
 import { Ionicons } from '@expo/vector-icons';
+import { RootState, AppDispatch } from '../store/store';
 
-const ProfileScreen = () => {
-    const dispatch = useDispatch();
-    const { user, role } = useSelector((state) => state.auth);
+const ProfileScreen: React.FC = () => {
+    const dispatch = useDispatch<AppDispatch>();
+    const { user, role } = useSelector((state: RootState) => state.auth);
 
     const handleLogout = () => {
         Alert.alert(

@@ -3,6 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
+import { RootState } from '../store/store';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -16,19 +17,21 @@ import MapViewScreen from '../screens/MapViewScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-const MainTabs = () => {
-    const { role } = useSelector((state) => state.auth);
+const MainTabs: React.FC = () => {
+    const { role } = useSelector((state: RootState) => state.auth);
 
     return (
         <Tab.Navigator
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
+                    let iconName: keyof typeof Ionicons.glyphMap;
                     if (route.name === 'Home') iconName = focused ? 'home' : 'home-outline';
                     else if (route.name === 'Add') iconName = focused ? 'add-circle' : 'add-circle-outline';
                     else if (route.name === 'My Donations') iconName = focused ? 'list' : 'list-outline';
                     else if (route.name === 'Map') iconName = focused ? 'map' : 'map-outline';
                     else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
+                    else iconName = 'help-circle-outline';
+
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#2E7D32',
@@ -45,8 +48,8 @@ const MainTabs = () => {
     );
 };
 
-const AppNavigator = () => {
-    const { user } = useSelector((state) => state.auth);
+const AppNavigator: React.FC = () => {
+    const { user } = useSelector((state: RootState) => state.auth);
 
     return (
         <Stack.Navigator screenOptions={{ headerShown: false }}>

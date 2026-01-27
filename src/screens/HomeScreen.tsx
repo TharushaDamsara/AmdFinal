@@ -6,11 +6,19 @@ import {
 import { getDonations } from '../services/donationService';
 import DonationCard from '../components/DonationCard';
 import { Ionicons } from '@expo/vector-icons';
+import { Donation } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const HomeScreen = ({ navigation }) => {
-    const [donations, setDonations] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
+type HomeScreenNavigationProp = StackNavigationProp<any, 'Home'>;
+
+interface Props {
+    navigation: HomeScreenNavigationProp;
+}
+
+const HomeScreen: React.FC<Props> = ({ navigation }) => {
+    const [donations, setDonations] = useState<Donation[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [refreshing, setRefreshing] = useState<boolean>(false);
 
     const fetchDonations = async () => {
         try {

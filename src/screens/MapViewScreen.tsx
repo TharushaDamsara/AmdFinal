@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, Alert } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker, Callout, Region } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { getDonations } from '../services/donationService';
+import { Donation } from '../types';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const MapViewScreen = ({ navigation }) => {
-    const [region, setRegion] = useState(null);
-    const [donations, setDonations] = useState([]);
-    const [loading, setLoading] = useState(true);
+type MapViewNavigationProp = StackNavigationProp<any, 'Map'>;
+
+interface Props {
+    navigation: MapViewNavigationProp;
+}
+
+const MapViewScreen: React.FC<Props> = ({ navigation }) => {
+    const [region, setRegion] = useState<Region | undefined>(undefined);
+    const [donations, setDonations] = useState<Donation[]>([]);
+    const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         (async () => {
