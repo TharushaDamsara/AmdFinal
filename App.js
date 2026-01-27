@@ -1,20 +1,31 @@
+import React, { useEffect } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { Provider, useDispatch } from 'react-redux';
+import { store } from './src/store/store';
+import AppNavigator from './src/navigation/AppNavigator';
+import { subscribeToAuthChanges } from './src/services/authService';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+
+const AppContent = () => {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const unsubscribe = dispatch(subscribeToAuthChanges());
+    return () => unsubscribe();
+  }, [dispatch]);
+
+  return (
+    <NavigationContainer>
+      <StatusBar style="auto" />
+      <AppNavigator />
+    </NavigationContainer>
+  );
+};
 
 export default function App() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Provider store={store}>
+      <AppContent />
+    </Provider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
