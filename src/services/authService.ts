@@ -30,6 +30,7 @@ export const registerUser = (email: string, password: string, role: UserRole, di
             role
         }));
     } catch (err: any) {
+        console.error("Firebase Auth Error:", err);
         dispatch(setError(err.message));
     }
 };

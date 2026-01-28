@@ -4,12 +4,13 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBiuUJWFT7-icmQ0MrfghExuGPU2zzmlo0",
+  authDomain: "food-donation-app-ba16d.firebaseapp.com",
+  projectId: "food-donation-app-ba16d",
+  storageBucket: "food-donation-app-ba16d.firebasestorage.app",
+  messagingSenderId: "1088271279604",
+  appId: "1:1088271279604:web:1fa6dde35bbc3d62f4c5a1",
+  measurementId: "G-34JL8D7E9P"
 };
 
 const app = initializeApp(firebaseConfig);
