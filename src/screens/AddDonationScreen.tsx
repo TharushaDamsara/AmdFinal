@@ -44,7 +44,7 @@ const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             allowsEditing: true,
             aspect: [4, 3],
             quality: 0.7,
@@ -63,14 +63,15 @@ const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
 
         setLoading(true);
         try {
-            const imageUrl = await uploadImage(image);
-            if (!imageUrl) throw new Error('Image upload failed');
+            // Option B: Skipping Firebase Storage upload and using a placeholder
+            // Using a high-quality placeholder image for food donations
+            const placeholderUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop";
 
             await createDonation({
                 title,
                 description,
                 quantity,
-                imageUrl,
+                imageUrl: placeholderUrl, // Use placeholder instead of uploaded URL
                 location,
                 donorId: user.uid,
                 donorName: user.displayName || 'Anonymous',
@@ -78,6 +79,7 @@ const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
             Alert.alert('Success', 'Food donation posted successfully!');
             navigation.navigate('Home');
         } catch (error) {
+            console.error("Post Error:", error);
             Alert.alert('Error', 'Failed to post donation. Please try again.');
         } finally {
             setLoading(false);

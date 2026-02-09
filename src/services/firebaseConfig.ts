@@ -1,7 +1,19 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import {
+  initializeAuth,
+  getAuth,
+  // @ts-ignore - getReactNativePersistence is available in the RN entry point
+  getReactNativePersistence
+} from "firebase/auth";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  memoryLocalCache
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 const firebaseConfig = {
   apiKey: "AIzaSyBiuUJWFT7-icmQ0MrfghExuGPU2zzmlo0",
@@ -14,7 +26,23 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+
+// Initialize Firebase Auth with persistence based on platform
+export const auth = Platform.OS === 'web'
+  ? getAuth(app)
+  : initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+  });
+
+// Initialize Firestore with appropriate caching strategy
+export const db = initializeFirestore(app, {
+  localCache: Platform.OS === 'web'
+    ? persistentLocalCache({
+      tabManager: persistentMultipleTabManager()
+    })
+    : memoryLocalCache(), // Use memory cache on native to avoid IndexedDB errors/warnings
+  experimentalForceLongPolling: true
+});
+
 export const storage = getStorage(app);
 export default app;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, Alert } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, Alert, Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { getDonations } from '../services/donationService';
 import { Donation } from '../types';
@@ -111,11 +111,20 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 8,
         marginBottom: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
+        ...Platform.select({
+            ios: {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.2,
+                shadowRadius: 2,
+            },
+            android: {
+                elevation: 2,
+            },
+            web: {
+                boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.2)',
+            },
+        }),
         borderLeftWidth: 4,
         borderLeftColor: '#2E7D32',
     },

@@ -41,16 +41,54 @@ export const loginUser = (email: string, password: string) => async (dispatch: A
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists()) {
-            const userData = userDoc.data();
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+                dispatch(setUser({
+                    user: { uid: user.uid, email: user.email, displayName: userData.displayName },
+                    role: userData.role as UserRole
+                }));
+            } else {
+                // User doc doesn't exist but auth succeeded
+                dispatch(setUser({
+                    user: { uid: user.uid, email: user.email, displayName: user.displayName || "" },
+                    role: undefined as any
+                }));
+            }
+        } catch (docErr: any) {
+            console.warn("Firestore user data fetch failed (likely offline or permission issue):", docErr.message);
+            // Fallback to basic info if doc fetch fails but auth was successful
             dispatch(setUser({
-                user: { uid: user.uid, email: user.email, displayName: userData.displayName },
-                role: userData.role as UserRole
+                user: { uid: user.uid, email: user.email, displayName: user.displayName || "" },
+                role: undefined as any
             }));
         }
     } catch (err: any) {
-        dispatch(setError(err.message));
+        console.error("Login Error:", err);
+        let message = "An error occurred during login.";
+
+        switch (err.code) {
+            case 'auth/invalid-email':
+                message = "The email address is badly formatted.";
+                break;
+            case 'auth/user-disabled':
+                message = "This user account has been disabled.";
+                break;
+            case 'auth/user-not-found':
+            case 'auth/wrong-password':
+            case 'auth/invalid-credential':
+                message = "Invalid email or password. Please try again.";
+                break;
+            case 'auth/network-request-failed':
+                message = "Network error. Please check your connection.";
+                break;
+            default:
+                message = err.message || message;
+        }
+        dispatch(setError(message));
+    } finally {
+        dispatch(setLoading(false));
     }
 };
 
@@ -66,12 +104,21 @@ export const logoutUser = () => async (dispatch: AppDispatch) => {
 export const subscribeToAuthChanges = () => (dispatch: AppDispatch) => {
     return onAuthStateChanged(auth, async (user: FirebaseUser | null) => {
         if (user) {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    dispatch(setUser({
+                        user: { uid: user.uid, email: user.email, displayName: userData.displayName },
+                        role: userData.role as UserRole
+                    }));
+                }
+            } catch (err: any) {
+                console.warn("Firestore background sync failed (likely offline):", err.message);
+                // Fallback: use auth user info if doc fetch fails
                 dispatch(setUser({
-                    user: { uid: user.uid, email: user.email, displayName: userData.displayName },
-                    role: userData.role as UserRole
+                    user: { uid: user.uid, email: user.email, displayName: user.displayName || "" },
+                    role: undefined as any // Role might be unavailable offline if not cached
                 }));
             }
         } else {
