@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../services/authService';
 import { RootState, AppDispatch } from '../store/store';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
+
+const { width } = Dimensions.get('window');
 
 type LoginNavigationProp = StackNavigationProp<any, 'Login'>;
 
@@ -14,6 +19,7 @@ interface Props {
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const dispatch = useDispatch<AppDispatch>();
     const { loading, error } = useSelector((state: RootState) => state.auth);
 
@@ -24,109 +30,196 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Welcome Back</Text>
-                <Text style={styles.subtitle}>Sign in to continue donating</Text>
-            </View>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.container}
+        >
+            <LinearGradient
+                colors={[COLORS.primary, COLORS.primaryDark]}
+                style={styles.background}
+            />
 
-            <View style={styles.form}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Email"
-                    value={email}
-                    onChangeText={setEmail}
-                    autoCapitalize="none"
-                    keyboardType="email-address"
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                />
+            <View style={styles.content}>
+                <View style={styles.header}>
+                    <View style={styles.logoContainer}>
+                        <Ionicons name="leaf" size={40} color={COLORS.white} />
+                    </View>
+                    <Text style={styles.title}>Welcome Back</Text>
+                    <Text style={styles.subtitle}>Let's continue saving food together</Text>
+                </View>
 
-                {error && <Text style={styles.errorText}>{error}</Text>}
+                <View style={styles.card}>
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="mail-outline" size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email Address"
+                            placeholderTextColor={COLORS.textSecondary}
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                            keyboardType="email-address"
+                        />
+                    </View>
 
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleLogin}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <Text style={styles.buttonText}>Login</Text>
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="lock-closed-outline" size={20} color={COLORS.textSecondary} style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            placeholderTextColor={COLORS.textSecondary}
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry={!showPassword}
+                        />
+                        <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                            <Ionicons
+                                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                                size={20}
+                                color={COLORS.textSecondary}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    {error && (
+                        <View style={styles.errorContainer}>
+                            <Ionicons name="alert-circle" size={16} color={COLORS.error} />
+                            <Text style={styles.errorText}>{error}</Text>
+                        </View>
                     )}
-                </TouchableOpacity>
 
-                <TouchableOpacity
-                    onPress={() => navigation.navigate('Register')}
-                    style={styles.link}
-                >
-                    <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.button, (!email || !password) && styles.buttonDisabled]}
+                        onPress={handleLogin}
+                        disabled={loading || !email || !password}
+                    >
+                        {loading ? (
+                            <ActivityIndicator color={COLORS.white} />
+                        ) : (
+                            <Text style={styles.buttonText}>Sign In</Text>
+                        )}
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('Register')}
+                        style={styles.link}
+                    >
+                        <Text style={styles.linkText}>
+                            Don't have an account? <Text style={styles.linkTextBold}>Create one</Text>
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        padding: 20,
+    },
+    background: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '45%',
+    },
+    content: {
+        flex: 1,
+        paddingHorizontal: SPACING.lg,
         justifyContent: 'center',
     },
     header: {
-        marginBottom: 40,
+        alignItems: 'center',
+        marginBottom: SPACING.xl,
+    },
+    logoContainer: {
+        width: 80,
+        height: 80,
+        borderRadius: BORDER_RADIUS.lg,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: SPACING.md,
     },
     title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#2E7D32',
+        ...TYPOGRAPHY.h1,
+        color: COLORS.white,
+        textAlign: 'center',
     },
     subtitle: {
-        fontSize: 16,
-        color: '#666',
-        marginTop: 5,
+        ...TYPOGRAPHY.body,
+        color: 'rgba(255,255,255,0.8)',
+        textAlign: 'center',
+        marginTop: SPACING.xs,
     },
-    form: {
-        gap: 15,
+    card: {
+        backgroundColor: COLORS.white,
+        borderRadius: BORDER_RADIUS.xl,
+        padding: SPACING.lg,
+        ...SHADOWS.heavy,
+        width: '100%',
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: COLORS.background,
+        borderRadius: BORDER_RADIUS.md,
+        paddingHorizontal: SPACING.md,
+        marginBottom: SPACING.md,
+        borderWidth: 1,
+        borderColor: COLORS.border,
+    },
+    inputIcon: {
+        marginRight: SPACING.sm,
     },
     input: {
-        backgroundColor: '#F5F5F5',
-        padding: 15,
-        borderRadius: 12,
+        flex: 1,
+        height: 55,
+        color: COLORS.text,
         fontSize: 16,
-        borderWidth: 1,
-        borderColor: '#E0E0E0',
     },
     button: {
-        backgroundColor: '#2E7D32',
-        padding: 18,
-        borderRadius: 12,
+        backgroundColor: COLORS.primary,
+        height: 55,
+        borderRadius: BORDER_RADIUS.md,
+        justifyContent: 'center',
         alignItems: 'center',
-        marginTop: 10,
-        elevation: 2,
+        marginTop: SPACING.sm,
+        ...SHADOWS.medium,
+    },
+    buttonDisabled: {
+        backgroundColor: COLORS.secondary,
+        opacity: 0.7,
     },
     buttonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 18,
         fontWeight: 'bold',
     },
+    errorContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: SPACING.md,
+        gap: 5,
+    },
     errorText: {
-        color: '#D32F2F',
-        textAlign: 'center',
+        color: COLORS.error,
+        fontSize: 14,
     },
     link: {
-        marginTop: 15,
+        marginTop: SPACING.lg,
         alignItems: 'center',
     },
     linkText: {
-        color: '#2E7D32',
-        fontSize: 16,
+        color: COLORS.textSecondary,
+        fontSize: 15,
+    },
+    linkTextBold: {
+        color: COLORS.primary,
+        fontWeight: 'bold',
     },
 });
 

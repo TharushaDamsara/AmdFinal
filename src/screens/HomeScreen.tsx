@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, FlatList, StyleSheet, ActivityIndicator,
-    RefreshControl, TouchableOpacity
+    RefreshControl, TouchableOpacity, ScrollView
 } from 'react-native';
 import { getDonations } from '../services/donationService';
 import DonationCard from '../components/DonationCard';
 import { Ionicons } from '@expo/vector-icons';
 import { Donation } from '../types';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 type HomeScreenNavigationProp = StackNavigationProp<any, 'Home'>;
 
@@ -41,10 +42,11 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
         fetchDonations();
     }, []);
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
             <View style={styles.centered}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={styles.loadingText}>Fetching donations...</Text>
             </View>
         );
     }
@@ -61,18 +63,27 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     />
                 )}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[COLORS.primary]}
+                        tintColor={COLORS.primary}
+                    />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="fast-food-outline" size={80} color="#ccc" />
-                        <Text style={styles.emptyText}>No food donations available right now.</Text>
+                        <View style={styles.emptyIconContainer}>
+                            <Ionicons name="fast-food" size={60} color={COLORS.primary} />
+                        </View>
+                        <Text style={styles.emptyTitle}>No Donations Yet</Text>
+                        <Text style={styles.emptySubtitle}>Check back later or pull down to refresh.</Text>
                         <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
-                            <Text style={styles.refreshBtnText}>Check Again</Text>
+                            <Text style={styles.refreshBtnText}>Refresh Feed</Text>
                         </TouchableOpacity>
                     </View>
                 }
                 contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
             />
         </View>
     );
@@ -81,36 +92,64 @@ const HomeScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: COLORS.background,
     },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: COLORS.background,
+    },
+    loadingText: {
+        ...TYPOGRAPHY.caption,
+        marginTop: SPACING.md,
+        color: COLORS.textSecondary,
     },
     listContent: {
-        padding: 20,
+        padding: SPACING.lg,
     },
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 100,
+        marginTop: 80,
     },
-    emptyText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 20,
+    emptyIconContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: SPACING.lg,
+    },
+    emptyTitle: {
+        ...TYPOGRAPHY.h2,
+        color: COLORS.text,
+    },
+    emptySubtitle: {
+        ...TYPOGRAPHY.body,
+        color: COLORS.textSecondary,
         textAlign: 'center',
+        marginTop: SPACING.xs,
+        paddingHorizontal: SPACING.xl,
     },
     refreshBtn: {
-        marginTop: 20,
-        padding: 10,
+        marginTop: SPACING.xl,
+        backgroundColor: COLORS.white,
+        paddingVertical: SPACING.md,
+        paddingHorizontal: SPACING.xl,
+        borderRadius: BORDER_RADIUS.md,
+        borderWidth: 1,
+        borderColor: COLORS.primary,
+        ...SHADOWS.light,
     },
     refreshBtnText: {
-        color: '#2E7D32',
+        color: COLORS.primary,
         fontWeight: 'bold',
+        fontSize: 16,
     }
 });
 
 export default HomeScreen;
+

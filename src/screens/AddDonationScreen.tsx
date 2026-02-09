@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity, StyleSheet,
-    ScrollView, Image, ActivityIndicator, Alert
+    ScrollView, Image, ActivityIndicator, Alert, KeyboardAvoidingView, Platform
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import { useSelector } from 'react-redux';
-import { createDonation, uploadImage } from '../services/donationService';
+import { createDonation } from '../services/donationService';
 import { RootState } from '../store/store';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Location as AppLocation } from '../types';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 type AddDonationNavigationProp = StackNavigationProp<any, 'Add'>;
 
@@ -57,26 +59,24 @@ const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
 
     const handleSubmit = async () => {
         if (!title || !description || !quantity || !image || !location || !user) {
-            Alert.alert('Error', 'Please fill all fields and add an image.');
+            Alert.alert('Incomplete Fields', 'Please fill all fields and add an image to proceed.');
             return;
         }
 
         setLoading(true);
         try {
-            // Option B: Skipping Firebase Storage upload and using a placeholder
-            // Using a high-quality placeholder image for food donations
             const placeholderUrl = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop";
 
             await createDonation({
                 title,
                 description,
                 quantity,
-                imageUrl: placeholderUrl, // Use placeholder instead of uploaded URL
+                imageUrl: placeholderUrl,
                 location,
                 donorId: user.uid,
                 donorName: user.displayName || 'Anonymous',
             });
-            Alert.alert('Success', 'Food donation posted successfully!');
+            Alert.alert('Success', 'Your donation has been posted!');
             navigation.navigate('Home');
         } catch (error) {
             console.error("Post Error:", error);
@@ -87,112 +87,144 @@ const AddDonationScreen: React.FC<Props> = ({ navigation }) => {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.label}>Food Item Title</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="e.g., Surplus Sandwiches"
-                value={title}
-                onChangeText={setTitle}
-            />
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>What are you donating?</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g., surplus sandwiches, fresh produce"
+                        placeholderTextColor={COLORS.textSecondary}
+                        value={title}
+                        onChangeText={setTitle}
+                    />
+                </View>
 
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-                style={[styles.input, styles.textArea]}
-                placeholder="Enter details, expiry info, etc."
-                value={description}
-                onChangeText={setDescription}
-                multiline
-                numberOfLines={4}
-            />
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Description & Expiry</Text>
+                    <TextInput
+                        style={[styles.input, styles.textArea]}
+                        placeholder="Provide details about the food and its freshness..."
+                        placeholderTextColor={COLORS.textSecondary}
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={4}
+                    />
+                </View>
 
-            <Text style={styles.label}>Quantity / Servings</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="e.g., 20 boxes"
-                value={quantity}
-                onChangeText={setQuantity}
-            />
+                <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Quantity / Servings</Text>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="e.g., 5 servings, 10 lunch boxes"
+                        placeholderTextColor={COLORS.textSecondary}
+                        value={quantity}
+                        onChangeText={setQuantity}
+                    />
+                </View>
 
-            <Text style={styles.label}>Food Image</Text>
-            <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-                {image ? (
-                    <Image source={{ uri: image }} style={styles.previewImage} />
-                ) : (
-                    <Text style={styles.imagePickerText}>Select or Take Photo</Text>
-                )}
-            </TouchableOpacity>
+                <Text style={styles.label}>Food Photo</Text>
+                <TouchableOpacity style={styles.imagePicker} onPress={pickImage} activeOpacity={0.8}>
+                    {image ? (
+                        <Image source={{ uri: image }} style={styles.previewImage} />
+                    ) : (
+                        <View style={styles.pickerPlaceholder}>
+                            <Ionicons name="camera-outline" size={40} color={COLORS.primary} />
+                            <Text style={styles.imagePickerText}>Select or Take Photo</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.submitButton}
-                onPress={handleSubmit}
-                disabled={loading}
-            >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.submitButtonText}>Post Donation</Text>
-                )}
-            </TouchableOpacity>
-        </ScrollView>
+                <TouchableOpacity
+                    style={[styles.submitButton, (!title || !description || !quantity || !image) && styles.buttonDisabled]}
+                    onPress={handleSubmit}
+                    disabled={loading || !title || !description || !quantity || !image}
+                >
+                    {loading ? (
+                        <ActivityIndicator color={COLORS.white} />
+                    ) : (
+                        <Text style={styles.submitButtonText}>Post Donation</Text>
+                    )}
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        padding: 20,
-        backgroundColor: '#fff',
+        padding: SPACING.lg,
+        backgroundColor: COLORS.white,
+    },
+    inputGroup: {
+        marginBottom: SPACING.lg,
     },
     label: {
-        fontSize: 16,
+        ...TYPOGRAPHY.body,
         fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-        marginTop: 15,
+        color: COLORS.text,
+        marginBottom: SPACING.sm,
     },
     input: {
-        backgroundColor: '#F5F5F5',
-        padding: 15,
-        borderRadius: 12,
+        backgroundColor: COLORS.background,
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.md,
         borderWidth: 1,
-        borderColor: '#E0E0E0',
+        borderColor: COLORS.border,
         fontSize: 16,
+        color: COLORS.text,
     },
     textArea: {
         height: 100,
         textAlignVertical: 'top',
     },
     imagePicker: {
-        height: 180,
-        backgroundColor: '#f0f0f0',
-        borderRadius: 12,
+        height: 200,
+        backgroundColor: COLORS.background,
+        borderRadius: BORDER_RADIUS.lg,
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: COLORS.border,
         borderStyle: 'dashed',
+        marginBottom: SPACING.xl,
+        overflow: 'hidden',
+    },
+    pickerPlaceholder: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        overflow: 'hidden',
+        gap: 8,
     },
     previewImage: {
         width: '100%',
         height: '100%',
     },
     imagePickerText: {
-        color: '#666',
+        ...TYPOGRAPHY.caption,
+        color: COLORS.primary,
+        fontWeight: '600',
     },
     submitButton: {
-        backgroundColor: '#2E7D32',
-        padding: 18,
-        borderRadius: 12,
+        backgroundColor: COLORS.primary,
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.md,
         alignItems: 'center',
-        marginTop: 30,
-        marginBottom: 50,
+        ...SHADOWS.medium,
+        marginBottom: 40,
+    },
+    buttonDisabled: {
+        backgroundColor: COLORS.secondary,
+        opacity: 0.6,
     },
     submitButtonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 18,
         fontWeight: 'bold',
     },
 });
 
 export default AddDonationScreen;
+

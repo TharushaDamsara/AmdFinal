@@ -1,7 +1,7 @@
 import React from 'react';
 import {
     View, Text, Image, StyleSheet, ScrollView,
-    TouchableOpacity, Alert, Linking
+    TouchableOpacity, Alert, Linking, Platform, StatusBar
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
@@ -10,6 +10,7 @@ import { RootState } from '../store/store';
 import { RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Donation } from '../types';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 type RootStackParamList = {
     DonationDetails: { donation: Donation };
@@ -30,7 +31,7 @@ const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
     const handleAccept = async () => {
         Alert.alert(
             "Accept Donation",
-            "Are you sure you want to accept this donation and schedule a pickup?",
+            "Confirm you want to accept this donation and coordinate pickup?",
             [
                 { text: "Cancel", style: "cancel" },
                 {
@@ -38,7 +39,7 @@ const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
                     onPress: async () => {
                         try {
                             await updateDonationStatus(donation.id, 'pending');
-                            Alert.alert("Success", "Donation accepted! You can now coordinate the pickup.");
+                            Alert.alert("Success", "Donation accepted! You can now coordinate the pickup with the donor.");
                             navigation.goBack();
                         } catch (error) {
                             Alert.alert("Error", "Failed to update status.");
@@ -56,14 +57,48 @@ const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Image source={{ uri: donation.imageUrl }} style={styles.image} />
+        <ScrollView style={styles.container} bounces={false} showsVerticalScrollIndicator={false}>
+            <StatusBar barStyle="light-content" />
+            <View style={styles.imageContainer}>
+                <Image source={{ uri: donation.imageUrl }} style={styles.image} />
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Ionicons name="arrow-back" size={24} color={COLORS.white} />
+                </TouchableOpacity>
+            </View>
 
             <View style={styles.content}>
+                <View style={styles.indicator} />
+
                 <View style={styles.header}>
                     <Text style={styles.title}>{donation.title}</Text>
-                    <View style={[styles.statusBadge, donation.status === 'available' ? styles.available : styles.pending]}>
-                        <Text style={styles.statusText}>{donation.status.toUpperCase()}</Text>
+                    <View style={[styles.statusBadge, donation.status === 'available' ? styles.availableBadge : styles.pendingBadge]}>
+                        <Text style={[styles.statusText, donation.status === 'available' ? styles.availableText : styles.pendingText]}>
+                            {donation.status.toUpperCase()}
+                        </Text>
+                    </View>
+                </View>
+
+                <View style={styles.infoGrid}>
+                    <View style={styles.infoBox}>
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="cube" size={20} color={COLORS.primary} />
+                        </View>
+                        <View>
+                            <Text style={styles.infoLabel}>Quantity</Text>
+                            <Text style={styles.infoValue}>{donation.quantity}</Text>
+                        </View>
+                    </View>
+                    <View style={styles.infoBox}>
+                        <View style={styles.iconCircle}>
+                            <Ionicons name="person" size={20} color={COLORS.primary} />
+                        </View>
+                        <View>
+                            <Text style={styles.infoLabel}>Donor</Text>
+                            <Text style={styles.infoValue}>{donation.donorName}</Text>
+                        </View>
                     </View>
                 </View>
 
@@ -72,26 +107,19 @@ const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
                     <Text style={styles.description}>{donation.description}</Text>
                 </View>
 
-                <View style={styles.infoGrid}>
-                    <View style={styles.infoBox}>
-                        <Ionicons name="cube-outline" size={24} color="#2E7D32" />
-                        <Text style={styles.infoLabel}>Quantity</Text>
-                        <Text style={styles.infoValue}>{donation.quantity}</Text>
+                <TouchableOpacity style={styles.locationButton} onPress={openMaps} activeOpacity={0.8}>
+                    <View style={styles.locationIconBg}>
+                        <Ionicons name="location" size={22} color={COLORS.white} />
                     </View>
-                    <View style={styles.infoBox}>
-                        <Ionicons name="person-outline" size={24} color="#2E7D32" />
-                        <Text style={styles.infoLabel}>Donor</Text>
-                        <Text style={styles.infoValue}>{donation.donorName}</Text>
+                    <View style={{ flex: 1 }}>
+                        <Text style={styles.locationTitle}>Pickup Location</Text>
+                        <Text style={styles.locationSubtitle}>Tap to view on Google Maps</Text>
                     </View>
-                </View>
-
-                <TouchableOpacity style={styles.locationButton} onPress={openMaps}>
-                    <Ionicons name="location-outline" size={20} color="#fff" />
-                    <Text style={styles.locationButtonText}>View Location on Maps</Text>
+                    <Ionicons name="chevron-forward" size={20} color={COLORS.textSecondary} />
                 </TouchableOpacity>
 
                 {role === 'ngo' && donation.status === 'available' && (
-                    <TouchableOpacity style={styles.acceptButton} onPress={handleAccept}>
+                    <TouchableOpacity style={styles.acceptButton} onPress={handleAccept} activeOpacity={0.9}>
                         <Text style={styles.acceptButtonText}>Accept Donation</Text>
                     </TouchableOpacity>
                 )}
@@ -103,112 +131,166 @@ const DonationDetailsScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.background,
+    },
+    imageContainer: {
+        position: 'relative',
     },
     image: {
         width: '100%',
-        height: 300,
-        backgroundColor: '#f0f0f0',
+        height: 350,
+        backgroundColor: COLORS.border,
+    },
+    backButton: {
+        position: 'absolute',
+        top: Platform.OS === 'ios' ? 60 : 40,
+        left: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     content: {
-        padding: 20,
+        flex: 1,
+        backgroundColor: COLORS.white,
         borderTopLeftRadius: 30,
         borderTopRightRadius: 30,
-        marginTop: -30,
-        backgroundColor: '#fff',
+        marginTop: -40,
+        padding: SPACING.lg,
+        ...SHADOWS.medium,
+    },
+    indicator: {
+        width: 40,
+        height: 5,
+        backgroundColor: COLORS.border,
+        borderRadius: 3,
+        alignSelf: 'center',
+        marginBottom: SPACING.md,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
+        alignItems: 'flex-start',
+        marginBottom: SPACING.lg,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
+        ...TYPOGRAPHY.h1,
+        color: COLORS.text,
         flex: 1,
     },
     statusBadge: {
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 12,
+        borderRadius: BORDER_RADIUS.sm,
+        marginLeft: SPACING.sm,
     },
-    available: {
+    availableBadge: {
         backgroundColor: '#E8F5E9',
     },
-    pending: {
+    pendingBadge: {
         backgroundColor: '#FFF3E0',
     },
     statusText: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: '#2E7D32',
     },
-    section: {
-        marginBottom: 20,
+    availableText: {
+        color: COLORS.success,
     },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#333',
-        marginBottom: 8,
-    },
-    description: {
-        fontSize: 16,
-        color: '#666',
-        lineHeight: 24,
+    pendingText: {
+        color: '#EF6C00',
     },
     infoGrid: {
         flexDirection: 'row',
-        gap: 15,
-        marginBottom: 25,
+        gap: SPACING.md,
+        marginBottom: SPACING.xl,
     },
     infoBox: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
-        padding: 15,
-        borderRadius: 15,
+        flexDirection: 'row',
+        backgroundColor: COLORS.background,
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.md,
+        alignItems: 'center',
+        gap: SPACING.sm,
+    },
+    iconCircle: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+        justifyContent: 'center',
         alignItems: 'center',
     },
     infoLabel: {
-        fontSize: 12,
-        color: '#999',
-        marginTop: 5,
+        fontSize: 10,
+        color: COLORS.textSecondary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
     },
     infoValue: {
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#333',
-        marginTop: 2,
+        color: COLORS.text,
+    },
+    section: {
+        marginBottom: SPACING.xl,
+    },
+    sectionTitle: {
+        ...TYPOGRAPHY.h3,
+        color: COLORS.text,
+        marginBottom: SPACING.xs,
+    },
+    description: {
+        ...TYPOGRAPHY.body,
+        color: COLORS.textSecondary,
+        lineHeight: 24,
     },
     locationButton: {
         flexDirection: 'row',
-        backgroundColor: '#4285F4',
-        padding: 15,
+        backgroundColor: COLORS.white,
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.lg,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: COLORS.border,
+        marginBottom: 30,
+    },
+    locationIconBg: {
+        width: 44,
+        height: 44,
         borderRadius: 12,
+        backgroundColor: '#4285F4',
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 15,
+        marginRight: SPACING.md,
     },
-    locationButtonText: {
-        color: '#fff',
+    locationTitle: {
         fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 8,
+        fontWeight: 'bold',
+        color: COLORS.text,
+    },
+    locationSubtitle: {
+        fontSize: 12,
+        color: COLORS.textSecondary,
+        marginTop: 2,
     },
     acceptButton: {
-        backgroundColor: '#2E7D32',
-        padding: 18,
-        borderRadius: 12,
+        backgroundColor: COLORS.primary,
+        padding: SPACING.md,
+        borderRadius: BORDER_RADIUS.md,
         alignItems: 'center',
         marginBottom: 40,
+        ...SHADOWS.medium,
     },
     acceptButtonText: {
-        color: '#fff',
+        color: COLORS.white,
         fontSize: 18,
         fontWeight: 'bold',
     },
 });
 
 export default DonationDetailsScreen;
+

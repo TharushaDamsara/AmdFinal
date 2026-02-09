@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     View, Text, FlatList, StyleSheet, ActivityIndicator,
-    RefreshControl, TouchableOpacity, Alert
+    RefreshControl, TouchableOpacity, Alert, Platform
 } from 'react-native';
 import { useSelector } from 'react-redux';
 import { getDonorDonations, deleteDonation } from '../services/donationService';
@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootState } from '../store/store';
 import { Donation } from '../types';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 type MyDonationsNavigationProp = StackNavigationProp<any, 'My Donations'>;
 
@@ -58,7 +59,6 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
                         try {
                             await deleteDonation(id);
                             setDonations(donations.filter(d => d.id !== id));
-                            Alert.alert("Success", "Donation removed.");
                         } catch (error) {
                             Alert.alert("Error", "Failed to delete.");
                         }
@@ -68,10 +68,11 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
         );
     };
 
-    if (loading) {
+    if (loading && !refreshing) {
         return (
             <View style={styles.centered}>
-                <ActivityIndicator size="large" color="#2E7D32" />
+                <ActivityIndicator size="large" color={COLORS.primary} />
+                <Text style={styles.loadingText}>Fetching your listings...</Text>
             </View>
         );
     }
@@ -82,7 +83,7 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
                 data={donations}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
-                    <View>
+                    <View style={styles.itemWrapper}>
                         <DonationCard
                             donation={item}
                             onPress={() => navigation.navigate('DonationDetails', { donation: item })}
@@ -92,19 +93,27 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
                                 style={styles.deleteBtn}
                                 onPress={() => handleDelete(item.id)}
                             >
-                                <Ionicons name="trash-outline" size={20} color="#D32F2F" />
+                                <Ionicons name="trash-outline" size={18} color={COLORS.error} />
                                 <Text style={styles.deleteBtnText}>Remove Listing</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 )}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        colors={[COLORS.primary]}
+                        tintColor={COLORS.primary}
+                    />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Ionicons name="list-outline" size={80} color="#ccc" />
-                        <Text style={styles.emptyText}>You haven't posted any donations yet.</Text>
+                        <View style={styles.emptyIconContainer}>
+                            <Ionicons name="list" size={60} color={COLORS.primary} />
+                        </View>
+                        <Text style={styles.emptyTitle}>No Listings Yet</Text>
+                        <Text style={styles.emptySubtitle}>You haven't posted any donations. Start by sharing what you have!</Text>
                         <TouchableOpacity
                             style={styles.postBtn}
                             onPress={() => navigation.navigate('Add')}
@@ -114,6 +123,7 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 }
                 contentContainerStyle={styles.listContent}
+                showsVerticalScrollIndicator={false}
             />
         </View>
     );
@@ -122,60 +132,86 @@ const MyDonationsScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#F8F9FA',
+        backgroundColor: COLORS.background,
     },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: COLORS.background,
+    },
+    loadingText: {
+        ...TYPOGRAPHY.caption,
+        marginTop: SPACING.md,
+        color: COLORS.textSecondary,
     },
     listContent: {
-        padding: 20,
+        padding: SPACING.lg,
+    },
+    itemWrapper: {
+        marginBottom: SPACING.lg,
     },
     actionContainer: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
-        marginTop: -10,
-        marginBottom: 20,
-        paddingRight: 5,
+        marginTop: -SPACING.lg,
+        paddingBottom: SPACING.md,
+        paddingRight: SPACING.sm,
     },
     deleteBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#FFEBEE',
+        backgroundColor: 'rgba(211, 47, 47, 0.05)',
         paddingVertical: 8,
-        paddingHorizontal: 12,
-        borderRadius: 8,
+        paddingHorizontal: 16,
+        borderRadius: BORDER_RADIUS.md,
     },
     deleteBtnText: {
-        color: '#D32F2F',
-        fontSize: 12,
+        color: COLORS.error,
+        fontSize: 13,
         fontWeight: '600',
-        marginLeft: 5,
+        marginLeft: 6,
     },
     emptyContainer: {
         flex: 1,
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 100,
+        marginTop: 80,
     },
-    emptyText: {
-        fontSize: 16,
-        color: '#999',
-        marginTop: 20,
+    emptyIconContainer: {
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: SPACING.lg,
+    },
+    emptyTitle: {
+        ...TYPOGRAPHY.h2,
+        color: COLORS.text,
+    },
+    emptySubtitle: {
+        ...TYPOGRAPHY.body,
+        color: COLORS.textSecondary,
         textAlign: 'center',
+        marginTop: SPACING.xs,
+        paddingHorizontal: SPACING.xl,
     },
     postBtn: {
-        marginTop: 20,
-        backgroundColor: '#2E7D32',
-        paddingVertical: 12,
-        paddingHorizontal: 25,
-        borderRadius: 12,
+        marginTop: SPACING.xl,
+        backgroundColor: COLORS.primary,
+        paddingVertical: SPACING.md,
+        paddingHorizontal: 30,
+        borderRadius: BORDER_RADIUS.md,
+        ...SHADOWS.medium,
     },
     postBtnText: {
-        color: '#fff',
+        color: COLORS.white,
         fontWeight: 'bold',
+        fontSize: 16,
     }
 });
 
 export default MyDonationsScreen;
+

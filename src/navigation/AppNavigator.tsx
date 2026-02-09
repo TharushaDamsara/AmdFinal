@@ -4,6 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
 import { Ionicons } from '@expo/vector-icons';
 import { RootState } from '../store/store';
+import { Platform, StyleSheet, View } from 'react-native';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
@@ -22,6 +24,7 @@ const MainTabs: React.FC = () => {
 
     return (
         <Tab.Navigator
+            id="MainTabs"
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                     let iconName: keyof typeof Ionicons.glyphMap;
@@ -32,17 +35,46 @@ const MainTabs: React.FC = () => {
                     else if (route.name === 'Profile') iconName = focused ? 'person' : 'person-outline';
                     else iconName = 'help-circle-outline';
 
-                    return <Ionicons name={iconName} size={size} color={color} />;
+                    return (
+                        <View style={focused ? styles.activeTabIcon : null}>
+                            <Ionicons name={iconName} size={focused ? 24 : 22} color={color} />
+                        </View>
+                    );
                 },
-                tabBarActiveTintColor: '#2E7D32',
-                tabBarInactiveTintColor: 'gray',
-                headerShown: true,
+                tabBarActiveTintColor: COLORS.primary,
+                tabBarInactiveTintColor: COLORS.textSecondary,
+                tabBarShowLabel: true,
+                tabBarLabelStyle: {
+                    fontSize: 12,
+                    fontWeight: '600',
+                    marginBottom: Platform.OS === 'ios' ? 0 : 5,
+                },
+                tabBarStyle: {
+                    height: Platform.OS === 'ios' ? 90 : 70,
+                    paddingBottom: Platform.OS === 'ios' ? 30 : 10,
+                    paddingTop: 10,
+                    backgroundColor: COLORS.white,
+                    borderTopWidth: 0,
+                    ...SHADOWS.medium,
+                },
+                headerStyle: {
+                    backgroundColor: COLORS.white,
+                    elevation: 0,
+                    shadowOpacity: 0,
+                    borderBottomWidth: 1,
+                    borderBottomColor: COLORS.border,
+                },
+                headerTitleStyle: {
+                    ...TYPOGRAPHY.h3,
+                    color: COLORS.text,
+                },
+                headerTitleAlign: 'center',
             })}
         >
-            <Tab.Screen name="Home" component={HomeScreen} />
-            {role === 'donor' && <Tab.Screen name="Add" component={AddDonationScreen} />}
-            {role === 'donor' && <Tab.Screen name="My Donations" component={MyDonationsScreen} />}
-            {role === 'ngo' && <Tab.Screen name="Map" component={MapViewScreen} />}
+            <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Explore' }} />
+            {role === 'donor' && <Tab.Screen name="Add" component={AddDonationScreen} options={{ title: 'Post' }} />}
+            {role === 'donor' && <Tab.Screen name="My Donations" component={MyDonationsScreen} options={{ title: 'Listings' }} />}
+            {role === 'ngo' && <Tab.Screen name="Map" component={MapViewScreen} options={{ title: 'NGO Map' }} />}
             <Tab.Screen name="Profile" component={ProfileScreen} />
         </Tab.Navigator>
     );
@@ -52,7 +84,10 @@ const AppNavigator: React.FC = () => {
     const { user } = useSelector((state: RootState) => state.auth);
 
     return (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator
+            id="RootStack"
+            screenOptions={{ headerShown: false }}
+        >
             {!user ? (
                 <>
                     <Stack.Screen name="Login" component={LoginScreen} />
@@ -64,7 +99,20 @@ const AppNavigator: React.FC = () => {
                     <Stack.Screen
                         name="DonationDetails"
                         component={DonationDetailsScreen}
-                        options={{ headerShown: true, title: 'Donation Details' }}
+                        options={{
+                            headerShown: true,
+                            title: 'Donation Details',
+                            headerStyle: {
+                                backgroundColor: COLORS.white,
+                                elevation: 0,
+                                shadowOpacity: 0,
+                            },
+                            headerTitleStyle: {
+                                ...TYPOGRAPHY.h3,
+                                color: COLORS.text,
+                            },
+                            headerTintColor: COLORS.primary,
+                        }}
                     />
                 </>
             )}
@@ -72,4 +120,14 @@ const AppNavigator: React.FC = () => {
     );
 };
 
+const styles = StyleSheet.create({
+    activeTabIcon: {
+        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+        padding: 8,
+        borderRadius: 12,
+        marginTop: -5,
+    }
+});
+
 export default AppNavigator;
+

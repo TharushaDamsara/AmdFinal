@@ -1,9 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { logoutUser } from '../services/authService';
 import { Ionicons } from '@expo/vector-icons';
 import { RootState, AppDispatch } from '../store/store';
+import { COLORS, SPACING, BORDER_RADIUS, TYPOGRAPHY, SHADOWS } from '../utils/theme';
 
 const ProfileScreen: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -15,125 +16,233 @@ const ProfileScreen: React.FC = () => {
             "Are you sure you want to logout?",
             [
                 { text: "Cancel", style: "cancel" },
-                { text: "Logout", onPress: () => dispatch(logoutUser()) }
+                {
+                    text: "Logout",
+                    style: "destructive",
+                    onPress: () => dispatch(logoutUser())
+                }
             ]
         );
     };
 
     return (
-        <View style={styles.container}>
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
                 <View style={styles.avatarContainer}>
-                    <Ionicons name="person-circle" size={100} color="#2E7D32" />
+                    <View style={styles.avatarCircle}>
+                        <Ionicons name="person" size={60} color={COLORS.primary} />
+                    </View>
+                    <TouchableOpacity style={styles.editAvatarBtn}>
+                        <Ionicons name="camera" size={20} color={COLORS.white} />
+                    </TouchableOpacity>
                 </View>
-                <Text style={styles.name}>{user?.displayName}</Text>
+                <Text style={styles.name}>{user?.displayName || 'User Name'}</Text>
                 <Text style={styles.email}>{user?.email}</Text>
-                <View style={styles.roleBadge}>
-                    <Text style={styles.roleText}>{role === 'donor' ? 'FOOD DONOR' : 'NGO / VOLUNTEER'}</Text>
+
+                <View style={styles.badgeContainer}>
+                    <View style={[styles.roleBadge, { backgroundColor: role === 'donor' ? COLORS.primary : COLORS.accent }]}>
+                        <Ionicons
+                            name={role === 'donor' ? 'heart' : 'business'}
+                            size={12}
+                            color={role === 'donor' ? COLORS.white : COLORS.text}
+                        />
+                        <Text style={[styles.roleText, { color: role === 'donor' ? COLORS.white : COLORS.text }]}>
+                            {role === 'donor' ? 'GENEROUS DONOR' : 'NGO PARTNER'}
+                        </Text>
+                    </View>
                 </View>
             </View>
 
-            <View style={styles.menu}>
-                <TouchableOpacity style={styles.menuItem}>
-                    <Ionicons name="settings-outline" size={24} color="#333" />
-                    <Text style={styles.menuText}>Account Settings</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Account</Text>
+                <View style={styles.card}>
+                    <ProfileMenuItem
+                        icon="person-outline"
+                        title="Edit Profile"
+                        onPress={() => { }}
+                    />
+                    <ProfileMenuItem
+                        icon="notifications-outline"
+                        title="Notification Settings"
+                        onPress={() => { }}
+                    />
+                    <ProfileMenuItem
+                        icon="shield-checkmark-outline"
+                        title="Privacy & Security"
+                        onPress={() => { }}
+                    />
+                </View>
+            </View>
 
-                <TouchableOpacity style={styles.menuItem}>
-                    <Ionicons name="notifications-outline" size={24} color="#333" />
-                    <Text style={styles.menuText}>Notifications</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={styles.menuItem}>
-                    <Ionicons name="help-circle-outline" size={24} color="#333" />
-                    <Text style={styles.menuText}>Help & Support</Text>
-                    <Ionicons name="chevron-forward" size={20} color="#ccc" />
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.menuItem, styles.logoutItem]} onPress={handleLogout}>
-                    <Ionicons name="log-out-outline" size={24} color="#D32F2F" />
-                    <Text style={[styles.menuText, styles.logoutText]}>Logout</Text>
-                </TouchableOpacity>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Support</Text>
+                <View style={styles.card}>
+                    <ProfileMenuItem
+                        icon="help-circle-outline"
+                        title="Help Center"
+                        onPress={() => { }}
+                    />
+                    <ProfileMenuItem
+                        icon="information-circle-outline"
+                        title="About Amd"
+                        onPress={() => { }}
+                    />
+                    <ProfileMenuItem
+                        icon="log-out-outline"
+                        title="Logout"
+                        onPress={handleLogout}
+                        isLogout
+                    />
+                </View>
             </View>
 
             <View style={styles.footer}>
-                <Text style={styles.version}>Version 1.0.0</Text>
+                <Text style={styles.version}>Version 1.0.0 (Build 124)</Text>
             </View>
-        </View>
+        </ScrollView>
     );
 };
+
+interface MenuItemProps {
+    icon: keyof typeof Ionicons.glyphMap;
+    title: string;
+    onPress: () => void;
+    isLogout?: boolean;
+}
+
+const ProfileMenuItem: React.FC<MenuItemProps> = ({ icon, title, onPress, isLogout }) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
+        <View style={[styles.menuIconContainer, isLogout && styles.logoutIconBg]}>
+            <Ionicons name={icon} size={22} color={isLogout ? COLORS.error : COLORS.primary} />
+        </View>
+        <Text style={[styles.menuText, isLogout && styles.logoutText]}>{title}</Text>
+        <Ionicons name="chevron-forward" size={18} color={COLORS.border} />
+    </TouchableOpacity>
+);
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: COLORS.background,
     },
     header: {
         alignItems: 'center',
-        paddingVertical: 40,
-        backgroundColor: '#F8F9FA',
+        paddingVertical: SPACING.xxl,
+        backgroundColor: COLORS.white,
+        borderBottomLeftRadius: BORDER_RADIUS.xl,
+        borderBottomRightRadius: BORDER_RADIUS.xl,
+        ...SHADOWS.light,
     },
     avatarContainer: {
-        marginBottom: 15,
+        position: 'relative',
+        marginBottom: SPACING.md,
+    },
+    avatarCircle: {
+        width: 110,
+        height: 110,
+        borderRadius: 55,
+        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 4,
+        borderColor: COLORS.white,
+    },
+    editAvatarBtn: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        backgroundColor: COLORS.primary,
+        width: 34,
+        height: 34,
+        borderRadius: 17,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 3,
+        borderColor: COLORS.white,
     },
     name: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
+        ...TYPOGRAPHY.h2,
+        color: COLORS.text,
     },
     email: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
+        ...TYPOGRAPHY.body,
+        color: COLORS.textSecondary,
+        marginTop: 2,
+    },
+    badgeContainer: {
+        marginTop: SPACING.md,
     },
     roleBadge: {
-        backgroundColor: '#2E7D32',
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingHorizontal: 12,
         paddingVertical: 6,
-        borderRadius: 20,
-        marginTop: 15,
+        borderRadius: BORDER_RADIUS.full,
+        gap: 6,
     },
     roleText: {
-        color: '#fff',
         fontSize: 10,
-        fontWeight: 'bold',
+        fontWeight: '900',
+        letterSpacing: 1,
     },
-    menu: {
-        padding: 20,
+    section: {
+        paddingHorizontal: SPACING.lg,
+        marginTop: SPACING.xl,
+    },
+    sectionTitle: {
+        ...TYPOGRAPHY.caption,
+        color: COLORS.textSecondary,
+        fontWeight: 'bold',
+        marginBottom: SPACING.sm,
+        marginLeft: SPACING.xs,
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    },
+    card: {
+        backgroundColor: COLORS.white,
+        borderRadius: BORDER_RADIUS.lg,
+        overflow: 'hidden',
+        ...SHADOWS.light,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 15,
+        padding: SPACING.md,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        borderBottomColor: COLORS.background,
+    },
+    menuIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 10,
+        backgroundColor: 'rgba(46, 125, 50, 0.05)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: SPACING.md,
+    },
+    logoutIconBg: {
+        backgroundColor: 'rgba(211, 47, 47, 0.05)',
     },
     menuText: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
-        marginLeft: 15,
-    },
-    logoutItem: {
-        borderBottomWidth: 0,
-        marginTop: 20,
+        fontWeight: '500',
+        color: COLORS.text,
     },
     logoutText: {
-        color: '#D32F2F',
-        fontWeight: 'bold',
+        color: COLORS.error,
     },
     footer: {
-        flex: 1,
-        justifyContent: 'flex-end',
         alignItems: 'center',
-        paddingBottom: 30,
+        paddingVertical: SPACING.xxl,
+        marginBottom: 20,
     },
     version: {
-        fontSize: 12,
-        color: '#ccc',
+        ...TYPOGRAPHY.caption,
+        color: COLORS.textSecondary,
+        opacity: 0.5,
     },
 });
 
 export default ProfileScreen;
+
