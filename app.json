@@ -20,11 +20,17 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.tharushadamsara.Amd.ShareBite"
     },
     "web": {
       "favicon": "./assets/favicon.png",
       "jsEngine": "jsc"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ad82e96f-03f0-4fb9-bf00-de7019891034"
+      }
     }
   }
 }

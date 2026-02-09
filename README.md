@@ -35,5 +35,8 @@ A React Native Expo mobile application designed to bridge the gap between food d
 ## 🎥 Demo
 - **YouTube Link**: [Insert YouTube Video Link Here]
 
+# apk link
+https://expo.dev/artifacts/eas/isLesgShZmxNH3KbsDQrcm.apk
+
 ## 📄 License
 MIT
